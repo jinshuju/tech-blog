@@ -28,7 +28,7 @@ This repository collects articles and notes about product engineering, developer
 
 ## 维护状态
 
-本仓库由金数据技术团队维护。问题、建议和选题想法可以通过本仓库 Issues 反馈。
+本仓库由金数据技术团队维护，主要用于发布技术文章和工程实践记录。暂不作为产品支持或安全问题反馈渠道；产品支持请访问帮助中心，安全问题请联系 support@jinshuju.net。
 
 ## 关于金数据
 
