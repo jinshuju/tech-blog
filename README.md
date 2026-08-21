@@ -14,7 +14,7 @@ This repository collects articles and notes about product engineering, developer
 
 静态站点（由 Issues 自动构建）：
 
-[https://jinshuju.github.io/tech-blog/](https://jinshuju.github.io/tech-blog/)
+[https://tech.jinshuju.net/](https://tech.jinshuju.net/)
 
 所有文章发布在本仓库 Issues，评论与讨论也在 Issues 进行：
 
