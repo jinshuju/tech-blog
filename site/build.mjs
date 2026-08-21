@@ -66,6 +66,27 @@ const excerpt = (markdown) =>
     .trim()
     .slice(0, 160)
 
+// Publishing convention: a translated post links to its counterpart in the
+// first line of the body. Two posts that link to each other and differ in
+// language are treated as one article; the index lists only the Chinese one.
+const detectTranslations = (posts) => {
+  const byNumber = new Map(posts.map((p) => [p.number, p]))
+  const refOf = (post) => {
+    const match = (post.body || '')
+      .slice(0, 300)
+      .match(new RegExp(`github\\.com/${config.repo.replace('/', '\\/')}/issues/(\\d+)`))
+    return match ? Number(match[1]) : null
+  }
+  const pairOf = new Map()
+  for (const post of posts) {
+    const other = byNumber.get(refOf(post))
+    if (other && refOf(other) === post.number && langOf(other.title) !== langOf(post.title)) {
+      pairOf.set(post.number, other)
+    }
+  }
+  return pairOf
+}
+
 // Cross-references between issues (e.g. 中文版/English version links) should
 // stay on the site instead of jumping back to GitHub.
 const localizeIssueLinks = (html, published) => {
@@ -103,14 +124,20 @@ ${body}
 </html>
 `
 
-const metaLine = (post) => {
+const metaLine = (post, alt) => {
   const labels = post.labels.map((l) => esc(l.name)).join(' / ')
-  return `<time datetime="${day(post.created_at)}">${day(post.created_at)}</time> · ${esc(post.user.login)}${labels ? ` · <span class="labels">${labels}</span>` : ''}`
+  const altLink = alt ? ` · <a class="alt-lang" href="${alt.href}">${alt.text}</a>` : ''
+  return `<time datetime="${day(post.created_at)}">${day(post.created_at)}</time> · ${esc(post.user.login)}${labels ? ` · <span class="labels">${labels}</span>` : ''}${altLink}`
 }
 
-const indexPage = (posts) => {
+const altTextFor = (counterpart) => (langOf(counterpart.title) === 'zh-CN' ? '中文版' : 'English version')
+
+const isListed = (post, pairOf) => !(pairOf.has(post.number) && langOf(post.title) !== 'zh-CN')
+
+const indexPage = (posts, pairOf) => {
+  const listed = posts.filter((post) => isListed(post, pairOf))
   const byYear = new Map()
-  for (const post of posts) {
+  for (const post of listed) {
     const year = post.created_at.slice(0, 4)
     if (!byYear.has(year)) byYear.set(year, [])
     byYear.get(year).push(post)
@@ -127,7 +154,7 @@ ${group
 <span class="no">№${post.number}</span>
 <div>
 <a class="entry-title" lang="${langOf(post.title)}" href="./posts/${post.number}/">${esc(post.title.trim())}</a>
-<p class="meta">${metaLine(post)}</p>
+<p class="meta">${metaLine(post, pairOf.has(post.number) ? { href: `./posts/${pairOf.get(post.number).number}/`, text: altTextFor(pairOf.get(post.number)) } : null)}</p>
 </div>
 </li>`,
   )
@@ -156,13 +183,14 @@ ${groups}
   })
 }
 
-const postPage = (post, contentHtml) => {
+const postPage = (post, contentHtml, counterpart) => {
   const title = post.title.trim()
+  const alt = counterpart ? { href: `../${counterpart.number}/`, text: altTextFor(counterpart) } : null
   const body = `<article>
 <header class="post-header">
 <p class="kicker"><a href="../../">${esc(config.title)}</a> · №${post.number}</p>
 <h1>${esc(title)}</h1>
-<p class="meta">${metaLine(post)}</p>
+<p class="meta">${metaLine(post, alt)}</p>
 </header>
 <div class="markdown-body">
 ${contentHtml}
@@ -182,9 +210,10 @@ ${contentHtml}
   })
 }
 
-const atomFeed = (posts, rendered) => {
+const atomFeed = (posts, rendered, pairOf) => {
   const updated = posts.map((p) => p.updated_at).sort().at(-1) ?? new Date(0).toISOString()
   const entries = posts
+    .filter((post) => isListed(post, pairOf))
     .slice(0, 20)
     .map((post) => {
       const url = `${config.url}posts/${post.number}/`
@@ -227,12 +256,13 @@ for (const post of posts) {
 
 await rm(outDir, { recursive: true, force: true })
 await mkdir(outDir, { recursive: true })
+const pairOf = detectTranslations(posts)
 await cp(path.join(here, 'style.css'), path.join(outDir, 'style.css'))
-await writeFile(path.join(outDir, 'index.html'), indexPage(posts))
-await writeFile(path.join(outDir, 'feed.xml'), atomFeed(posts, rendered))
+await writeFile(path.join(outDir, 'index.html'), indexPage(posts, pairOf))
+await writeFile(path.join(outDir, 'feed.xml'), atomFeed(posts, rendered, pairOf))
 for (const post of posts) {
   const dir = path.join(outDir, 'posts', String(post.number))
   await mkdir(dir, { recursive: true })
-  await writeFile(path.join(dir, 'index.html'), postPage(post, localizeIssueLinks(rendered.get(post.number), published)))
+  await writeFile(path.join(dir, 'index.html'), postPage(post, localizeIssueLinks(rendered.get(post.number), published), pairOf.get(post.number)))
 }
 console.log(`Done → ${outDir}`)
