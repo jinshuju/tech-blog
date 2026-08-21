@@ -12,19 +12,9 @@ This repository collects articles and notes about product engineering, developer
 
 ## 文章入口
 
-静态站点（由 Issues 自动构建）：
-
-[https://tech.jinshuju.net/](https://tech.jinshuju.net/)
-
-所有文章发布在本仓库 Issues，评论与讨论也在 Issues 进行：
+所有文章目前发布在本仓库 Issues：
 
 [https://github.com/jinshuju/tech-blog/issues](https://github.com/jinshuju/tech-blog/issues)
-
-### 静态站点如何工作
-
-- 文章即 Issue：`site/config.json` 中 `authors` 名单内成员创建的 open issue 会被发布；close 即下架
-- Issue 的增改、labels 变化、push 到 main 都会触发 [`publish.yml`](./.github/workflows/publish.yml) 重新构建并部署到 GitHub Pages
-- 本地预览：`GITHUB_TOKEN=$(gh auth token) node site/build.mjs`，产物在 `dist/`
 
 ## 推荐主题
 
