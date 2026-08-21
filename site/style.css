@@ -77,6 +77,8 @@ a:hover { color: var(--gold-deep); }
   margin: 0.3rem 0 0;
 }
 
+.alt-lang { color: var(--gold); }
+
 /* ---------- masthead / index ---------- */
 
 .masthead {
