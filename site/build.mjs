@@ -109,7 +109,8 @@ const shell = ({ lang, title, description, canonical, root, body }) => `<!doctyp
 <meta property="og:url" content="${esc(canonical)}">
 <link rel="canonical" href="${esc(canonical)}">
 <link rel="alternate" type="application/atom+xml" title="${esc(config.title)}" href="${root}feed.xml">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>金</text></svg>">
+<link rel="icon" type="image/png" href="${root}favicon.png">
+<link rel="apple-touch-icon" href="${root}favicon.png">
 <link rel="stylesheet" href="${root}style.css">
 </head>
 <body>
@@ -258,6 +259,7 @@ await rm(outDir, { recursive: true, force: true })
 await mkdir(outDir, { recursive: true })
 const pairOf = detectTranslations(posts)
 await cp(path.join(here, 'style.css'), path.join(outDir, 'style.css'))
+await cp(path.join(here, 'favicon.png'), path.join(outDir, 'favicon.png'))
 await writeFile(path.join(outDir, 'index.html'), indexPage(posts, pairOf))
 await writeFile(path.join(outDir, 'feed.xml'), atomFeed(posts, rendered, pairOf))
 for (const post of posts) {
